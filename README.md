@@ -1,6 +1,11 @@
 # vams-opcua-server
  OPCUA-SERVER
 
+# Docker pull
+```
+docker pull anandshekhr/opcua-server
+```
+
 
 # Docker Configuration
 
@@ -24,3 +29,4 @@ Shutdown
 ```
 docker-compose down
 ```
+
