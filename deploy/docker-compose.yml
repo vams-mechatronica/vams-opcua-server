@@ -1,0 +1,19 @@
+# docker-compose.yml
+
+version: '3'
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/image/Dockerfile
+    command: python server.py
+    volumes:
+      - ../src:/app/opcua/server
+    ports:
+      - "4840:4840"
+    
+    restart: always
+
+volumes:
+  postgres_data:
