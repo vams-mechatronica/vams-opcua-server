@@ -5,6 +5,8 @@ import random
 import time
 import threading
 import socket
+import shutil
+import os
 try:
     from IPython import embed
 except ImportError:
@@ -85,6 +87,13 @@ def setup_security(server):
     server.load_certificate("certs/server_cert.pem")
     server.load_private_key("certs/server_private_key.pem")
 
+    trusted_cert_dir = "certs/trusted"
+    rejected_cert_dir = "certs/rejected"
+
+    if not os.path.exists(trusted_cert_dir):
+        os.makedirs(trusted_cert_dir)
+    if not os.path.exists(rejected_cert_dir):
+        os.makedirs(rejected_cert_dir)
 
 class SubHandler(object):
     """

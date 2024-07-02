@@ -3,10 +3,11 @@
 version: '3'
 
 services:
-  web:
+  opcua-server:
     build:
       context: ..
       dockerfile: deploy/image/Dockerfile
+    image: opcua-server:latest
     command: python server.py
     volumes:
       - ../src:/app/opcua/server
@@ -14,5 +15,5 @@ services:
       - "4840:4840"
     
     restart: always
-    
+
 
