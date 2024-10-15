@@ -145,7 +145,7 @@ def main():
     objects = server.get_objects_node()
 
     # Create machine nodes
-    machines = ["Machine1", "Machine2", "Machine3"]
+    machines = ["Machine1"]
     machine_nodes = {}
     for machine_name in machines:
         machine_nodes[machine_name] = create_machine_node(idx, server, machine_name)
