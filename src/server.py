@@ -110,7 +110,7 @@ class SubHandler(object):
 def update_machine_data(nodes, server_details):
     while True:
         for machine, node_dict in nodes.items():
-            node_dict["On/Off State"].set_value(random.choice([True, False]))
+            node_dict["On/Off State"].set_value(random.choice([0,4]))
             node_dict["Job ID"].set_value(random.randint(1000, 9999))
             node_dict["Job Name"].set_value(f"Job_{random.randint(1, 100)}")
             node_dict["Spindle RPM"].set_value(random.uniform(500, 5000))
@@ -128,7 +128,7 @@ def update_machine_data(nodes, server_details):
         server_details["Server Build"].set_value(f"Build_{random.randint(1, 1000)}")
         server_details["Manufacturer Name"].set_value(f"Manufacturer_{random.randint(1, 10)}")
 
-        time.sleep(5)  # Update data every 5 seconds
+        time.sleep(random.randint(300,1200))  # Update data every 5 seconds
 
 
 def main():
