@@ -36,6 +36,7 @@ def create_machine_node(idx, server, machine_name):
     tool_name = machine.add_variable(idx, "Tool Name", "", ua.VariantType.String)
     tool_dimensions = machine.add_variable(idx, "Tool Dimensions", "", ua.VariantType.String)
     prog_status = machine.add_variable(idx, "Program Status", "", ua.VariantType.String)
+    part_name = machine.add_variable(idx, "Part Name", "", ua.VariantType.String)
 
     for var in machine.get_children():
         var.set_writable()
@@ -51,7 +52,8 @@ def create_machine_node(idx, server, machine_name):
         "Tool Number": tool_number,
         "Tool Name": tool_name,
         "Tool Dimensions": tool_dimensions,
-        "Program Status": prog_status
+        "Program Status": prog_status,
+        "Part Name":part_name,
     }
 
 
@@ -110,17 +112,18 @@ class SubHandler(object):
 def update_machine_data(nodes, server_details):
     while True:
         for machine, node_dict in nodes.items():
-            node_dict["On/Off State"].set_value(random.choice([0,4]))
+            node_dict["On/Off State"].set_value(random.randint(0,4))
             node_dict["Job ID"].set_value(random.randint(1000, 9999))
             node_dict["Job Name"].set_value(f"Job_{random.randint(1, 100)}")
-            node_dict["Spindle RPM"].set_value(random.uniform(500, 5000))
+            node_dict["Spindle RPM"].set_value(random.randint(10, 100))
             node_dict["Program Fully Executed"].set_value(random.uniform(0, 100))
-            node_dict["Feed Rate"].set_value(random.uniform(0, 100))
-            node_dict["Rapid Inverse"].set_value(random.uniform(0, 100))
+            node_dict["Feed Rate"].set_value(random.randint(0, 100))
+            node_dict["Rapid Inverse"].set_value(random.randint(0, 100))
             node_dict["Tool Number"].set_value(random.randint(1, 20))
             node_dict["Tool Name"].set_value(f"Tool_{random.randint(1, 20)}")
             node_dict["Tool Dimensions"].set_value(f"{random.uniform(10, 100):.2f}x{random.uniform(10, 100):.2f}x{random.uniform(10, 100):.2f}")
             node_dict["Program Status"].set_value(random.choice(["Running", "Stopped", "Paused"]))
+            node_dict["Part Name"].set_value(random.choice(f"part_{random.uniform(10, 100):.2f}x{random.uniform(10, 100):.2f}"))
 
         server_details["Server Name"].set_value(f"Server_{random.randint(1, 10)}")
         server_details["Server IP Address"].set_value(socket.gethostbyname(socket.gethostname()))
@@ -128,7 +131,7 @@ def update_machine_data(nodes, server_details):
         server_details["Server Build"].set_value(f"Build_{random.randint(1, 1000)}")
         server_details["Manufacturer Name"].set_value(f"Manufacturer_{random.randint(1, 10)}")
 
-        time.sleep(random.randint(300,1200))  # Update data every 5 seconds
+        time.sleep(random.randint(3,12))  # Update data every 5 seconds
 
 
 def main():
