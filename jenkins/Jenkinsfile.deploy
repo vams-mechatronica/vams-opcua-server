@@ -1,0 +1,42 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "bookstore:latest"
+        CONTAINER_NAME = "bookstore"
+        PORT_MAPPING = "8000:8000"
+    }
+
+    stages {
+        stage('Cleanup Old Container') {
+            steps {
+                echo "🧹 Stopping and removing existing container if any..."
+                sh '''
+                    docker stop $CONTAINER_NAME || true
+                    docker rm $CONTAINER_NAME || true
+                '''
+            }
+        }
+
+        stage('Run New Container') {
+            steps {
+                echo "🚀 Running Docker container..."
+                sh '''
+                    docker run -d \
+                        --name $CONTAINER_NAME \
+                        -p $PORT_MAPPING \
+                        $IMAGE_NAME
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment completed: http://localhost:8000"
+        }
+        failure {
+            echo "❌ Deployment failed"
+        }
+    }
+}

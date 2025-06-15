@@ -1,0 +1,118 @@
+pipeline {
+    agent any
+
+    parameters {
+        choice(
+            name: 'ENVIRONMENT',
+            choices: ['Dev', 'Int','Uat', 'Prod'],
+            description: 'Select the environment to build for'
+        )
+
+        choice(
+            name: 'BUILD_ACTION',
+            choices: ['Build Only', 'Build and Deploy'],
+            description: 'Choose whether to only build or also deploy'
+        )
+    }
+
+    environment {
+        GIT_REPO = "https://github.com/vams-mechatronica/vams-opcua-server.git"
+        COMPOSE_FILE = "deploy/docker-compose.yml"
+        IMAGE_NAME = "opcua-server"
+        PORT_MAPPING = "4840:4840"
+        CONTAINER_NAME = "opcua-server"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                echo "📥 Cloning code from repository..."
+                git url: "${GIT_REPO}"
+            }
+        }
+
+        stage('Preparing') {
+            steps {
+                script {
+                    def prefix = (params.ENVIRONMENT in ['Dev', 'Int']) ? '0.0' : '1.0'
+                    env.VERSION_PREFIX = prefix
+                    echo "📌 Version prefix set to: ${env.VERSION_PREFIX}"
+
+                    def previousBuild = currentBuild.previousBuild
+                    def lastVersion = "${env.VERSION_PREFIX}.0"
+
+                    if (previousBuild != null) {
+                        def previousDesc = previousBuild.getDescription()
+                        if (previousDesc?.startsWith('#')) {
+                            lastVersion = previousDesc.replace('#', '')
+                        }
+                    }
+
+                    def (major, minor, patch) = lastVersion.tokenize('.').collect { it as int }
+                    patch += 1
+                    env.CUSTOM_VERSION = "${major}.${minor}.${patch}"
+                    currentBuild.displayName = "#${env.CUSTOM_VERSION}"
+                    currentBuild.description = "#${env.CUSTOM_VERSION}"
+
+                    // Tag to pass into docker build
+                    env.TAG = "v${env.CUSTOM_VERSION}"
+
+                    echo "🔢 Computed Version: ${env.CUSTOM_VERSION}"
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                echo "🔧 Building Docker image..."
+                sh """
+                    export PATH=/usr/local/bin:\$PATH
+                    docker --version
+                    docker-compose -f ${COMPOSE_FILE} build --build-arg BUILD_NUMBER=${env.TAG}
+                """
+            }
+        }
+
+        stage('Terraform Cleanup') {
+            when {
+                expression { params.BUILD_ACTION == 'Build and Deploy' }
+            }
+            steps {
+                echo "🧹 Stopping and removing existing container..."
+                sh """
+                    export PATH=/usr/local/bin:\$PATH
+                    docker stop ${CONTAINER_NAME} || true
+                    docker rm ${CONTAINER_NAME} || true
+                """
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                expression { params.BUILD_ACTION == 'Build and Deploy' }
+            }
+            steps {
+                echo "🚀 Running Docker container..."
+                sh """
+                    export PATH=/usr/local/bin:\$PATH
+                    docker-compose -f ${COMPOSE_FILE} up -d
+                """
+            }
+        }
+
+        stage('Post Check') {
+            steps {
+                echo "✅ Pipeline complete."
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Docker Compose build succeeded"
+        }
+        failure {
+            echo "❌ Docker Compose build failed"
+        }
+    }
+}
